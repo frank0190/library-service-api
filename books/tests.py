@@ -17,13 +17,13 @@ def detail_url(book_id: int) -> Response:
     return reverse("books:book-detail", args=[book_id])
 
 
-def create_book(as_dict: bool=False, **params) -> Book | bool:
+def create_book(as_dict: bool = False, **params) -> Book | bool:
     defaults = {
         "name": "test_name",
         "author": "test_author",
         "cover": "SOFT",
         "inventory": 10,
-        "daily_fee": 10.00
+        "daily_fee": 10.00,
     }
     defaults.update(params)
     return defaults if as_dict else Book.objects.create(**defaults)
