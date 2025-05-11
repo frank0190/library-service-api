@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from books.models import Book
-
+from books.serializers import BookSerializer
 
 BOOK_URL = reverse("books:book-list")
 
@@ -61,3 +61,39 @@ class AuthenticatedUserTest(UnauthenticatedUserTest):
             username="test_user", password="test123user"
         )
         self.client.force_authenticate(self.user)
+
+
+class AdminUserTest(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            username="user_admin", password="test123user", is_staff=True
+        )
+        self.client.force_authenticate(self.user)
+
+        self.book_1 = create_book(name="test_1")
+        self.book_2 = create_book(name="test_2")
+
+    def test_book_list(self) -> None:
+        response = self.client.get(BOOK_URL)
+        books = Book.objects.all()
+        serializer = BookSerializer(books, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"], serializer.data)
+
+    def test_book_detail(self) -> None:
+        response = self.client.get(detail_url(self.book_1.id))
+        serializer = BookSerializer(self.book_1)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_book_create(self) -> None:
+        payload = create_book(as_dict=True)
+        response = self.client.post(BOOK_URL, payload)
+        book = Book.objects.get(id=response.data["id"])
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        for field in payload:
+            self.assertEqual(getattr(book, field), payload[field])
