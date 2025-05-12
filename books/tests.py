@@ -58,7 +58,7 @@ class AuthenticatedUserTest(UnauthenticatedUserTest):
         super().setUp()
 
         self.user = get_user_model().objects.create_user(
-            username="test_user", password="test123user"
+            email="test@user.com", password="test123user"
         )
         self.client.force_authenticate(self.user)
 
@@ -67,7 +67,7 @@ class AdminUserTest(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            username="user_admin", password="test123user", is_staff=True
+            email="user@admin.com", password="test123user", is_staff=True
         )
         self.client.force_authenticate(self.user)
 
