@@ -14,8 +14,18 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        queryset = self.queryset
         if self.request.user.is_staff:
-            return self.queryset
+
+            is_active = self.request.query_params.get("is_active")
+            if is_active:
+                queryset = queryset.filter(is_active=is_active == "true")
+
+            user_id = self.request.query_params.get("user_id")
+            if user_id:
+                queryset = queryset.filter(user_id=user_id)
+
+            return queryset
         return self.queryset.filter(user=self.request.user)
 
     def get_serializer_class(self):
