@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils.timezone import now
 from django.conf import settings
 from django.db.models import Q, F
 
@@ -7,7 +6,7 @@ from books.models import Book
 
 
 class Borrowing(models.Model):
-    borrow_date = models.DateField(default=now)
+    borrow_date = models.DateField(auto_now_add=True)
     expected_return_date = models.DateField()
     actual_return_date = models.DateField(null=True, blank=True)
     book = models.ForeignKey(
