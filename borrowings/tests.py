@@ -9,7 +9,13 @@ from django.urls import reverse
 
 from borrowings.models import Borrowing
 from books.tests import create_book
-from borrowings.serializers import BorrowingListSerializer, BorrowingDetailSerializer
+from borrowings.serializers import (
+    BorrowingListSerializer,
+    BorrowingDetailSerializer,
+    BorrowingAdminListSerializer,
+    BorrowingAdminDetailSerializer
+)
+
 
 BORROWING_URL = reverse("borrowings:borrowing-list")
 
@@ -94,3 +100,61 @@ class AuthenticatedUserTest(TestCase):
         self.assertEqual(payload["expected_return_date"], borrowing.expected_return_date)
         self.assertEqual(payload["book"], borrowing.book.id)
         self.assertEqual(self.user_1.id, borrowing.user.id)
+
+
+class AdminUserTest(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.admin_user = get_user_model().objects.create_user(
+            email="admin@user.com", password="test123user", is_staff=True
+        )
+
+        self.user_1 = get_user_model().objects.create_user(
+            email="test_1@user.com", password="test123user"
+        )
+        self.user_2 = get_user_model().objects.create_user(
+            email="test_2@user.com", password="test123user"
+        )
+
+        self.borrowing_1 = create_borrowing(user=self.user_1, is_active=True)
+        self.borrowing_2 = create_borrowing(user=self.user_2, is_active=False)
+
+        self.client.force_authenticate(self.admin_user)
+
+    def test_borrowing_list(self) -> None:
+        response = self.client.get(BORROWING_URL)
+        borrowings = Borrowing.objects.all()
+        serializer = BorrowingAdminListSerializer(borrowings, many=True)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"], serializer.data)
+
+    def test_filtering_borrowings_by_params(self) -> None:
+        response_1 = self.client.get(BORROWING_URL, {"user_id": self.user_1.id})
+        response_2 = self.client.get(BORROWING_URL, {"is_active": "true"})
+        serializer_1 = BorrowingAdminListSerializer(self.borrowing_1)
+        serializer_2 = BorrowingAdminListSerializer(self.borrowing_2)
+
+        self.assertEqual(response_1.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_2.status_code, status.HTTP_200_OK)
+        self.assertIn(serializer_1.data, response_1.data["results"])
+        self.assertIn(serializer_1.data, response_2.data["results"])
+        self.assertNotIn(serializer_2.data, response_1.data["results"])
+        self.assertNotIn(serializer_2.data, response_2.data["results"])
+
+    def test_borrowing_detail(self) -> None:
+        response = self.client.get(detail_url(self.borrowing_1.id))
+        serializer = BorrowingAdminDetailSerializer(self.borrowing_1)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
+
+    def test_borrowing_create(self) -> None:
+        payload = create_borrowing(as_dict=True)
+        response = self.client.post(BORROWING_URL, payload)
+        borrowing = Borrowing.objects.get(id=response.data["id"])
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(payload["expected_return_date"], borrowing.expected_return_date)
+        self.assertEqual(payload["book"], borrowing.book.id)
+        self.assertEqual(self.admin_user.id, borrowing.user.id)
