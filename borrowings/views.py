@@ -35,9 +35,17 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == "list":
-            return BorrowingAdminListSerializer if self.request.user.is_staff else BorrowingListSerializer
+            return (
+                BorrowingAdminListSerializer
+                if self.request.user.is_staff
+                else BorrowingListSerializer
+            )
         if self.action == "retrieve":
-            return BorrowingAdminDetailSerializer if self.request.user.is_staff else BorrowingDetailSerializer
+            return (
+                BorrowingAdminDetailSerializer
+                if self.request.user.is_staff
+                else BorrowingDetailSerializer
+            )
         return BorrowingSerializer
 
     def perform_create(self, serializer):
@@ -45,7 +53,6 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         book.inventory -= 1
         book.save()
         serializer.save(user=self.request.user)
-
 
     @action(methods=["GET"], detail=True, url_path="return")
     def return_book(self, request, pk=None):

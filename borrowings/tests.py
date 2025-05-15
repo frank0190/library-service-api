@@ -24,7 +24,7 @@ def detail_url(borrowing_id: int) -> Response:
     return reverse("borrowings:borrowing-detail", args=[borrowing_id])
 
 
-def create_borrowing(as_dict: bool=False, **params):
+def create_borrowing(as_dict: bool = False, **params):
     defaults = {
         "expected_return_date": date(2025, 6, 30),
         "book": create_book(),
@@ -56,7 +56,10 @@ class UnauthenticatedUserTest(TestCase):
         ]
 
         for response in responses:
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+            self.assertEqual(
+                response.status_code,
+                status.HTTP_401_UNAUTHORIZED
+            )
 
 
 class AuthenticatedUserTest(TestCase):
@@ -97,7 +100,10 @@ class AuthenticatedUserTest(TestCase):
         borrowing = Borrowing.objects.get(id=response.data["id"])
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(payload["expected_return_date"], borrowing.expected_return_date)
+        self.assertEqual(
+            payload["expected_return_date"],
+            borrowing.expected_return_date
+        )
         self.assertEqual(payload["book"], borrowing.book.id)
         self.assertEqual(self.user_1.id, borrowing.user.id)
 
@@ -130,7 +136,10 @@ class AdminUserTest(TestCase):
         self.assertEqual(response.data["results"], serializer.data)
 
     def test_filtering_borrowings_by_params(self) -> None:
-        response_1 = self.client.get(BORROWING_URL, {"user_id": self.user_1.id})
+        response_1 = self.client.get(
+            BORROWING_URL,
+            {"user_id": self.user_1.id}
+        )
         response_2 = self.client.get(BORROWING_URL, {"is_active": "true"})
         serializer_1 = BorrowingAdminListSerializer(self.borrowing_1)
         serializer_2 = BorrowingAdminListSerializer(self.borrowing_2)
@@ -155,6 +164,9 @@ class AdminUserTest(TestCase):
         borrowing = Borrowing.objects.get(id=response.data["id"])
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(payload["expected_return_date"], borrowing.expected_return_date)
+        self.assertEqual(
+            payload["expected_return_date"],
+            borrowing.expected_return_date
+        )
         self.assertEqual(payload["book"], borrowing.book.id)
         self.assertEqual(self.admin_user.id, borrowing.user.id)
