@@ -5,6 +5,7 @@ Django==4.2.21
 django-debug-toolbar==5.2.0
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
+dotenv==0.9.9
 flake8==7.2.0
 mccabe==0.7.0
 mypy_extensions==1.1.0
@@ -14,6 +15,7 @@ platformdirs==4.3.8
 pycodestyle==2.13.0
 pyflakes==3.3.2
 PyJWT==2.9.0
+python-dotenv==1.1.0
 sqlparse==0.5.3
 tomli==2.2.1
 typing_extensions==4.13.2
