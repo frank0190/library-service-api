@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from borrowings.models import Borrowing
+from borrowings.notifications.telegram import send_telegram_message
 from borrowings.serializers import (
     BorrowingSerializer,
     BorrowingListSerializer,
@@ -52,7 +53,17 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         book = serializer.validated_data["book"]
         book.inventory -= 1
         book.save()
-        serializer.save(user=self.request.user)
+        borrowing = serializer.save(user=self.request.user)
+
+        message = (
+            f"Created new borrowing!\n"
+            f"\n"
+            f"User: {borrowing.user.get_full_name()}\n"
+            f"Book: {borrowing.book.__str__()}\n"
+            f"Data of borrowing: {borrowing.borrow_date}\n"
+            f"Expected return date: {borrowing.expected_return_date}\n"
+        )
+        send_telegram_message(message)
 
     @action(methods=["GET"], detail=True, url_path="return")
     def return_book(self, request, pk=None):
