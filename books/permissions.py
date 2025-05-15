@@ -9,6 +9,6 @@ class IsAdminUserOrReadOnly(BasePermission):
     """
 
     def has_permission(self, request, view) -> bool:
-        return request.method in SAFE_METHODS or (
-            request.user and request.user.is_staff
-        )
+        if hasattr(view, "action") and view.action == "list":
+            return True
+        return request.user and request.user.is_staff

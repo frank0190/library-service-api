@@ -38,19 +38,19 @@ class UnauthenticatedUserTest(TestCase):
 
     def test_available_endpoints(self) -> None:
         list_response = self.client.get(BOOK_URL)
-        detail_response = self.client.get(detail_url(self.book_1.id))
 
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
 
     def test_unavailable_endpoints(self) -> None:
-        create_response = self.client.post(BOOK_URL, {})
-        update_response = self.client.put(detail_url(self.book_1.id), {})
-        delete_response = self.client.delete(detail_url(self.book_1.id))
+        responses = [
+            self.client.post(BOOK_URL, {}),
+            self.client.get(detail_url(self.book_1.id)),
+            self.client.put(detail_url(self.book_1.id), {}),
+            self.client.delete(detail_url(self.book_1.id))
+        ]
 
-        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(update_response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(delete_response.status_code, status.HTTP_403_FORBIDDEN)
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class AuthenticatedUserTest(UnauthenticatedUserTest):
@@ -61,6 +61,17 @@ class AuthenticatedUserTest(UnauthenticatedUserTest):
             email="test@user.com", password="test123user"
         )
         self.client.force_authenticate(self.user)
+
+    def test_unavailable_endpoints(self) -> None:
+        responses = [
+            self.client.post(BOOK_URL, {}),
+            self.client.get(detail_url(self.book_1.id)),
+            self.client.put(detail_url(self.book_1.id), {}),
+            self.client.delete(detail_url(self.book_1.id))
+        ]
+
+        for response in responses:
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class AdminUserTest(TestCase):
