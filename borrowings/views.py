@@ -1,4 +1,10 @@
 from django.utils.timezone import now
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter
+)
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +21,13 @@ from borrowings.serializers import (
 )
 
 
+@extend_schema_view(
+    create=extend_schema(summary="Create borrowing"),
+    retrieve=extend_schema(summary="Get borrowing details"),
+    update=extend_schema(summary="Update borrowing"),
+    partial_update=extend_schema(summary="Partially update borrowing"),
+    destroy=extend_schema(summary="Delete borrowing"),
+)
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
     permission_classes = [IsAuthenticated]
@@ -65,8 +78,33 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         )
         send_telegram_message(message)
 
+    @extend_schema(
+        summary="List borrowings",
+        description="Returns a list of borrowings with optional params.",
+        parameters=[
+            OpenApiParameter(
+                name="is_active",
+                type=OpenApiTypes.STR,
+                description="Filter by is_active field, choose from true/false options.",
+                required=False
+            ),
+            OpenApiParameter(
+                name="user_id",
+                type=OpenApiTypes.INT,
+                description="Filter by user_id field.",
+                required=False
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(
+        responses={status.HTTP_200_OK: {"detail": "The book returned successfully."}}
+    )
     @action(methods=["GET"], detail=True, url_path="return")
     def return_book(self, request, pk=None):
+        """Return the book in library and close the borrowing."""
         borrowing = self.get_object()
         if borrowing.is_active:
             borrowing.is_active = False
