@@ -5,7 +5,7 @@ from drf_spectacular.utils import (
     extend_schema,
     OpenApiParameter
 )
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -24,11 +24,13 @@ from borrowings.serializers import (
 @extend_schema_view(
     create=extend_schema(summary="Create borrowing"),
     retrieve=extend_schema(summary="Get borrowing details"),
-    update=extend_schema(summary="Update borrowing"),
-    partial_update=extend_schema(summary="Partially update borrowing"),
-    destroy=extend_schema(summary="Delete borrowing"),
 )
-class BorrowingViewSet(viewsets.ModelViewSet):
+class BorrowingViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = Borrowing.objects.all()
     permission_classes = [IsAuthenticated]
 
